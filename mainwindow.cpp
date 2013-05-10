@@ -14,7 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
     loadConnections();
     ui->tableWidget->setItemPrototype(new QTableWidgetItem);
     ui->tableWidget->setColumnCount(colCount);
-    loadFile("/home/ahmed/Aya/GUI/Lib/row");
+    fileName = "/home/ahmed/Aya/GUI/Lib/row" ;
+    loadFile(fileName);
 
 }
 
@@ -28,17 +29,23 @@ void MainWindow::loadActions()
     createActions();
     ui->mainToolBar->addAction(newRow);
     ui->mainToolBar->addAction(deleteRow);
+    ui->mainToolBar->addAction(save);
 }
 
 void MainWindow::loadConnections()
 {
     connect(newRow,SIGNAL(triggered()),this,SLOT(createRow()));
     connect(deleteRow,SIGNAL(triggered()),this,SLOT(removeRow()));
+    connect(save,SIGNAL(triggered()),this,SLOT(saveFile()));
+    connect(ui->action_About,SIGNAL(triggered()),this,SLOT(about()));
+    connect(ui->action_Quit,SIGNAL(triggered()),qApp,SLOT(quit()));
+    connect(ui->action_Add_new,SIGNAL(triggered()),this,SLOT(createRow()));
 }
 
 void MainWindow::createActions(){
     newRow = new QAction("&New",this);
     deleteRow = new QAction("&Delete",this);
+    save = new QAction("&Save",this);
 }
 
 bool MainWindow::loadFile(const QString &fileName){
@@ -76,19 +83,40 @@ void MainWindow::loadRow(int row,const QString ch)
 
         col++;
     }
-    lastRow = row;
-    qDebug()<< lastRow<<endl;
+    lastRow = ui->tableWidget->rowCount();
 }
 
 
 void MainWindow::createRow()
 {
-    lastRow++;
     ui->tableWidget->insertRow(lastRow);
+    lastRow++;
 }
 
 void MainWindow::removeRow()
 {
     ui->tableWidget->removeRow(ui->tableWidget->currentRow());
     lastRow--;
+}
+
+bool MainWindow::saveFile(){
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::warning(this, tr("Library"),
+                             tr("Cannot read file %1:\n%2.")
+                             .arg(file.fileName())
+                             .arg(file.errorString()));
+        return false;
+    }
+    QTextStream out(&file);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    for(int row = 0 ;row < lastRow;row++) {
+        for(int col = 0 ; col < colCount ; col++){
+            out << ui->tableWidget->item(row,col)->text() << "," ;
+
+        }
+        out << endl;
+    }
+    QApplication::restoreOverrideCursor();
+    return true;
 }

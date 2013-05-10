@@ -36,11 +36,14 @@ private:
      */
     QAction *newRow;
     QAction *deleteRow;
+    QAction *save;
 
 
 private slots:
     void createRow();
     void removeRow();
+    bool saveFile();
+    void about();
 
 };
 
